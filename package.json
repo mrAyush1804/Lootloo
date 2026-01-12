@@ -17,7 +17,7 @@
     "migrate": "node src/database/migrate.js",
     "migrate:rollback": "node src/database/rollback.js",
     "seed": "node src/database/seed.js",
-    "build": "npm run build:docker",
+    "build": "echo 'Backend build complete - no compilation needed'",
     "build:docker": "docker build -t taskloot:latest .",
     "smoke-test": "node tests/smoke.js"
   },

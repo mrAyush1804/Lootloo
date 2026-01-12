@@ -14,10 +14,13 @@ FROM base AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json package-lock.json* ./
+COPY src/ ./src/
+COPY .eslintrc* ./
+COPY jest.config.js ./
 
-# Skip build for backend (no compilation needed)
-# RUN npm run build
+# Build the application (backend - no compilation needed)
+RUN npm run build
 
 # Production image, copy all the files and run the app
 FROM base AS runner
@@ -25,15 +28,15 @@ WORKDIR /app
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 taskloot
 
 # Copy application source code
-COPY --from=builder --chown=nextjs:nodejs /app/src ./src
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=taskloot:nodejs /app/src ./src
+COPY --from=deps --chown=taskloot:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=taskloot:nodejs /app/package.json ./package.json
 
 # Create logs directory
-RUN mkdir -p /app/logs && chown nextjs:nodejs /app/logs
+RUN mkdir -p /app/logs && chown taskloot:nodejs /app/logs
 
 # Set environment variables
 ENV NODE_ENV=production
