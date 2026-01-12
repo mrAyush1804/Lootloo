@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskloot-config
+  labels:
+    app: taskloot
+data:
+  # Application Configuration
+  NODE_ENV: "production"
+  PORT: "3000"
+  COMMISSION_RATE: "0.15"
+  FEATURED_TASK_COST_PER_DAY: "99"
+  
+  # Cache Configuration
+  CACHE_TTL_SHORT: "300"
+  CACHE_TTL_MEDIUM: "1800"
+  CACHE_TTL_LONG: "3600"
+  
+  # Rate Limiting
+  RATE_LIMIT_WINDOW: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  
+  # Security
+  BCRYPT_ROUNDS: "12"
+  JWT_EXPIRES_IN: "15m"
+  JWT_REFRESH_EXPIRES_IN: "7d"
+  
+  # File Upload
+  MAX_FILE_SIZE: "5242880"
+  ALLOWED_FILE_TYPES: "image/jpeg,image/png,image/webp"
+  
+  # AWS Configuration
+  S3_BUCKET: "taskloot-uploads"
+  S3_REGION: "ap-south-1"
+  
+  # Monitoring
+  LOG_LEVEL: "info"
+  METRICS_ENABLED: "true"
+  
+  # Feature Flags
+  ENABLE_ANALYTICS: "true"
+  ENABLE_PAYMENTS: "true"
+  ENABLE_FEATURED_TASKS: "true"
+  
+  # Business Logic
+  REWARD_EXPIRY_DAYS: "30"
+  MAX_ATTEMPTS_PER_TASK: "1"
+  MIN_PUZZLE_PIECES: "9"
+  MAX_PUZZLE_PIECES: "25"

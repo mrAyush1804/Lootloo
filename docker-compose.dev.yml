@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Development Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: taskloot-app-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://taskloot:taskloot123@postgres:5432/taskloot_dev
+      - REDIS_URL=redis://redis:6379
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    networks:
+      - taskloot-network
+    command: npm run dev
+
+  # Development PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: taskloot-postgres-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=taskloot_dev
+      - POSTGRES_USER=taskloot
+      - POSTGRES_PASSWORD=taskloot123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - taskloot-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskloot -d taskloot_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Development Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: taskloot-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - taskloot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Development Tools
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: taskloot-redis-commander-dev
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0
+    depends_on:
+      - redis
+    networks:
+      - taskloot-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: taskloot-pgadmin-dev
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=dev@taskloot.com
+      - PGADMIN_DEFAULT_PASSWORD=dev123
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - taskloot-network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  pgadmin_dev_data:
+    driver: local
+
+networks:
+  taskloot-network:
+    driver: bridge
